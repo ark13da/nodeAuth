@@ -1,25 +1,29 @@
 import errorTypes from "../utils/errorTypes.js";
 
-const handleErrors = (err, req, res, next) => {
-  console.error(err.stack);
+const errorHandler = ({ err = null, type = null, req, res, next }) => {
+  if (err) {
+    console.error("Error:", err.stack);
+    return res.status(400).json({
+      message: "An error occurred",
+      error: err.message,
+    });
+  }
 
-  switch (err.name) {
+  const typeName = type || errorTypes.UNKNOWN_ERROR;
+
+  switch (typeName) {
     case errorTypes.UNAUTHORIZED_ERROR:
       return res.status(401).json({ success: false, message: "Unauthorized" });
     case errorTypes.USER_PASS_ERROR:
       return res
         .status(401)
         .json({ success: false, message: "Incorrect username or password" });
-    case errorTypes.BAD_REQUEST:
-      return res.status(400).json({
-        success: false,
-        message: err.message,
-      });
-    case errorTypes.VALIDATION_ERROR:
-      return res.status(400).json({
-        success: false,
-        message: err.message,
-      });
+    case errorTypes.TOKEN_NOT_AVAILABLE:
+      return res
+        .status(401)
+        .json({ success: false, message: "Token not available" });
+    case errorTypes.UNKNOWN_ERROR:
+      return res.status(400).json({ success: false, message: "Unknown error" });
     default:
       return res
         .status(500)
@@ -27,4 +31,4 @@ const handleErrors = (err, req, res, next) => {
   }
 };
 
-export default handleErrors;
+export default errorHandler;
