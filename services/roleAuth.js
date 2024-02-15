@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import "../utils/esm.js";
+import errorTypes from "../utils/errorTypes.js";
+import errorHandler from "./errorHandler.js";
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -9,17 +11,16 @@ const roleAuth = (role) => {
 
     if (token) {
       jwt.verify(token, jwtSecret, (err, decodedToken) => {
-        if (err || decodedToken.role !== role) {
-          return res
-            .status(401)
-            .json({ success: false, message: "Not authorized" });
+        if (err) {
+          return errorHandler({ err, res });
+        }
+        if (decodedToken.role !== role) {
+          return errorHandler({ type: errorTypes.UNAUTHORIZED_ERROR, res });
         }
         next();
       });
     } else {
-      return res
-        .status(401)
-        .json({ message: "Not authorized, token not available" });
+      return errorHandler({ type: errorTypes.TOKEN_NOT_AVAILABLE, res });
     }
   };
 };
